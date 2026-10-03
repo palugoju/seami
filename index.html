@@ -133,21 +133,23 @@
             </div>
         </div>
 
-        <!-- Touch Controls (Mobile & Tablet) -->
-        <div id="touch-controls" class="absolute inset-0 pointer-events-auto z-30 hidden flex justify-between items-end p-4 md:p-6">
-            <!-- Left Movement Controls -->
-            <div class="flex flex-col gap-3">
-                <div class="flex gap-2">
-                    <button id="btn-left" class="touch-btn w-16 h-16 md:w-20 md:h-20 rounded-2xl text-slate-800 text-2xl md:text-3xl font-bold flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-arrow-left"></i></button>
-                    <button id="btn-right" class="touch-btn w-16 h-16 md:w-20 md:h-20 rounded-2xl text-slate-800 text-2xl md:text-3xl font-bold flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-arrow-right"></i></button>
-                </div>
-                <button id="btn-jump" class="touch-btn w-full md:w-[160px] px-4 py-3 rounded-2xl bg-emerald-300 text-emerald-950 font-marker text-sm md:text-base flex items-center justify-center gap-2 flex-shrink-0"><i class="fa-solid fa-arrow-up"></i> JUMP</button>
+        <!-- Touch Controls (Mobile & Tablet) - Bottom Layout -->
+        <div id="touch-controls" class="absolute bottom-0 inset-x-0 pointer-events-auto z-30 hidden flex justify-between items-end p-4 md:p-6 gap-4">
+            <!-- Left Side: Jump & Action Buttons -->
+            <div class="flex flex-col gap-2">
+                <button id="btn-punch" class="touch-btn w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-red-400 text-red-950 font-marker text-xs md:text-sm flex flex-col items-center justify-center flex-shrink-0"><i class="fa-solid fa-hand-fist text-lg md:text-2xl mb-1"></i><span class="text-[10px] md:text-xs">PUNCH</span></button>
+                <button id="btn-special" class="touch-btn w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-yellow-300 text-yellow-950 font-marker text-xs md:text-sm flex flex-col items-center justify-center flex-shrink-0"><i class="fa-solid fa-bolt text-lg md:text-2xl mb-1"></i><span class="text-[10px] md:text-xs">BURST</span></button>
             </div>
 
-            <!-- Right Action Controls -->
-            <div class="flex flex-col gap-2 items-end">
-                <button id="btn-punch" class="touch-btn w-16 h-16 md:w-24 md:h-24 rounded-2xl bg-red-400 text-red-950 font-marker text-xs md:text-sm flex flex-col items-center justify-center flex-shrink-0"><i class="fa-solid fa-hand-fist text-xl md:text-2xl mb-1"></i><span>PUNCH</span></button>
-                <button id="btn-special" class="touch-btn w-16 h-16 md:w-24 md:h-24 rounded-2xl bg-yellow-300 text-yellow-950 font-marker text-xs md:text-sm flex flex-col items-center justify-center flex-shrink-0"><i class="fa-solid fa-bolt text-xl md:text-2xl mb-1"></i><span>BURST</span></button>
+            <!-- Center: Jump Button -->
+            <div class="flex-shrink-0">
+                <button id="btn-jump" class="touch-btn px-6 md:px-8 py-3 md:py-4 rounded-2xl bg-emerald-300 text-emerald-950 font-marker text-sm md:text-base flex items-center justify-center gap-2"><i class="fa-solid fa-arrow-up md:text-lg"></i> JUMP</button>
+            </div>
+
+            <!-- Right Side: Movement Controls -->
+            <div class="flex gap-2 flex-shrink-0">
+                <button id="btn-left" class="touch-btn w-16 h-16 md:w-20 md:h-20 rounded-2xl text-slate-800 text-2xl md:text-3xl font-bold flex items-center justify-center"><i class="fa-solid fa-arrow-left"></i></button>
+                <button id="btn-right" class="touch-btn w-16 h-16 md:w-20 md:h-20 rounded-2xl text-slate-800 text-2xl md:text-3xl font-bold flex items-center justify-center"><i class="fa-solid fa-arrow-right"></i></button>
             </div>
         </div>
 
