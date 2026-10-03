@@ -1,0 +1,1057 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>s. Sedmi: Energy Unleashed</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Patrick+Hand&family=Fredoka+One&display=swap');
+
+        * {
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #0d1117;
+            font-family: 'Patrick Hand', cursive;
+            overflow: hidden;
+            color: #111827;
+        }
+
+        .font-marker {
+            font-family: 'Permanent Marker', cursive;
+        }
+
+        .font-fredoka {
+            font-family: 'Fredoka One', cursive;
+        }
+
+        /* HD Crisp Paper substrate texture */
+        .paper-bg {
+            background-color: #f7f4eb;
+            background-image: 
+                radial-gradient(rgba(0, 0, 0, 0.02) 1px, transparent 0),
+                linear-gradient(to right, rgba(0, 0, 0, 0.015) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(0, 0, 0, 0.015) 1px, transparent 1px);
+            background-size: 16px 16px, 32px 32px, 32px 32px;
+        }
+
+        /* Subtle stationary crease overlay (Never shakes) */
+        .paper-crease {
+            background: linear-gradient(135deg, rgba(255,255,255,0.3) 0%, rgba(0,0,0,0.03) 50%, rgba(255,255,255,0.15) 100%);
+            pointer-events: none;
+        }
+
+        /* Responsive touch controls */
+        .touch-btn {
+            background: rgba(255, 255, 255, 0.88);
+            border: 3px solid #1f2937;
+            box-shadow: 0 4px 0 #1f2937;
+            transition: all 0.08s ease;
+        }
+
+        .touch-btn:active {
+            transform: translateY(3px);
+            box-shadow: 0 1px 0 #1f2937;
+            background: #fef08a;
+        }
+    </style>
+</head>
+<body class="w-screen h-screen flex items-center justify-center relative select-none">
+
+    <div id="game-container" class="relative w-full h-full max-w-[1280px] max-h-[720px] shadow-2xl overflow-hidden rounded-none md:rounded-3xl border-0 md:border-4 border-slate-800 paper-bg">
+        
+        <!-- Game Canvas with high resolution scaling -->
+        <canvas id="gameCanvas" class="w-full h-full block cursor-crosshair"></canvas>
+        <div class="paper-crease absolute inset-0 z-10"></div>
+
+        <!-- HUD Layer -->
+        <div id="hud-layer" class="absolute inset-0 pointer-events-none z-20 hidden p-4 flex flex-col justify-between">
+            <div class="flex justify-between items-start gap-4">
+                <!-- HP & Ruby Energy Bar -->
+                <div class="flex flex-col gap-2 bg-white/90 p-3 rounded-2xl border-3 border-slate-800 shadow-[4px_4px_0_#1f2937] backdrop-blur-sm">
+                    <div class="flex items-center gap-2">
+                        <span class="font-marker text-sm text-emerald-700 uppercase">HP:</span>
+                        <div id="hearts-container" class="flex gap-1.5 text-red-500 text-2xl">
+                            <i class="fa-solid fa-heart"></i>
+                            <i class="fa-solid fa-heart"></i>
+                            <i class="fa-solid fa-heart"></i>
+                        </div>
+                    </div>
+
+                    <div class="w-48 md:w-64">
+                        <div class="flex justify-between text-xs font-marker text-red-600 mb-1">
+                            <span><i class="fa-solid fa-gem mr-1"></i> RUBY ENERGY</span>
+                            <span id="ruby-percent">0%</span>
+                        </div>
+                        <div class="w-full h-4 bg-slate-200 rounded-full border-2 border-slate-800 overflow-hidden p-0.5">
+                            <div id="ruby-bar" class="h-full bg-gradient-to-r from-red-500 via-emerald-400 to-emerald-600 rounded-full transition-all duration-150 w-0"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Score Board -->
+                <div class="flex flex-col items-end gap-2 font-marker">
+                    <div class="bg-white/90 px-5 py-2 rounded-2xl border-3 border-slate-800 shadow-[4px_4px_0_#1f2937] text-right">
+                        <div class="text-xs text-slate-500">SCORE</div>
+                        <div id="score-display" class="text-3xl font-black text-emerald-600">000000</div>
+                    </div>
+                    <div class="bg-yellow-300/90 px-3 py-1 rounded-xl border-2 border-slate-800 text-xs text-slate-800 font-bold shadow-[2px_2px_0_#1f2937]">
+                        HIGH: <span id="hud-highscore" class="text-red-600">000000</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="ruby-ready-prompt" class="self-center mb-16 hidden animate-bounce">
+                <span class="px-6 py-2.5 rounded-2xl bg-red-600 font-marker text-white text-base md:text-lg tracking-widest border-3 border-slate-800 shadow-[4px_4px_0_#1f2937]">
+                    PRESS [X] / BURST FOR SUPER AURA BLAST!
+                </span>
+            </div>
+
+            <!-- Controls Guide -->
+            <div class="hidden md:flex justify-between text-xs font-marker text-slate-700 bg-white/85 p-2.5 rounded-xl border-2 border-slate-800 shadow-[3px_3px_0_#1f2937]">
+                <span><i class="fa-solid fa-keyboard mr-1 text-emerald-600"></i> MOVE: A / D or ARROWS</span>
+                <span>JUMP: W / SPACE</span>
+                <span>RUBY PUNCH: Z / J</span>
+                <span>SUPER BLAST: X / K</span>
+            </div>
+        </div>
+
+        <!-- Touch Controls (Mobile) -->
+        <div id="touch-controls" class="absolute inset-0 pointer-events-auto z-30 hidden md:hidden flex justify-between items-end p-4">
+            <div class="flex gap-2">
+                <button id="btn-left" class="touch-btn w-16 h-16 rounded-2xl text-slate-800 text-2xl font-bold flex items-center justify-center"><i class="fa-solid fa-arrow-left"></i></button>
+                <button id="btn-right" class="touch-btn w-16 h-16 rounded-2xl text-slate-800 text-2xl font-bold flex items-center justify-center"><i class="fa-solid fa-arrow-right"></i></button>
+            </div>
+
+            <div class="flex gap-2 items-end">
+                <button id="btn-jump" class="touch-btn w-14 h-14 rounded-2xl bg-emerald-300 text-emerald-950 font-marker text-xs flex flex-col items-center justify-center"><i class="fa-solid fa-arrow-up text-lg"></i>JUMP</button>
+                <button id="btn-punch" class="touch-btn w-16 h-16 rounded-2xl bg-red-400 text-red-950 font-marker text-xs flex flex-col items-center justify-center"><i class="fa-solid fa-hand-fist text-xl"></i>PUNCH</button>
+                <button id="btn-special" class="touch-btn w-14 h-14 rounded-2xl bg-yellow-300 text-yellow-950 font-marker text-xs flex flex-col items-center justify-center"><i class="fa-solid fa-bolt text-lg"></i>BURST</button>
+            </div>
+        </div>
+
+        <!-- Start Screen Overlay -->
+        <div id="start-screen" class="absolute inset-0 z-40 bg-amber-50/90 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center">
+            <h1 class="text-5xl md:text-7xl font-marker text-emerald-600 tracking-wider mb-1 drop-shadow-[3px_3px_0_#1f2937]">
+                s. Sedmi.
+            </h1>
+            <div class="text-xl md:text-3xl font-marker text-red-600 tracking-wide mb-6 drop-shadow-[2px_2px_0_#1f2937]">
+                ENERGY UNLEASHED (HD)
+            </div>
+
+            <div class="w-48 h-48 rounded-3xl bg-white border-4 border-slate-800 p-2 flex flex-col items-center justify-center relative shadow-[6px_6px_0_#1f2937] mb-6">
+                <div class="text-4xl text-emerald-600 mb-1"><i class="fa-solid fa-bolt"></i></div>
+                <span class="font-marker text-base text-red-600">EXACT ARTWORK</span>
+                <span class="font-marker text-xs text-amber-600 mt-1">NO SCREEN SHAKE • CRISP GRAPHICS</span>
+            </div>
+
+            <p class="max-w-md text-sm md:text-base font-bold text-slate-700 mb-6 leading-snug">
+                Defend the drawing canvas! Collect <strong class="text-emerald-600">Green Infinity Icons</strong> & <strong class="text-red-600">Ruby Badges</strong>, defeat dark ink drones, and unleash the ultimate <strong class="text-red-600">Aura Blast</strong>!
+            </p>
+
+            <button id="start-btn" class="px-8 py-4 bg-emerald-500 rounded-2xl font-marker text-xl text-white tracking-wider border-4 border-slate-800 shadow-[5px_5px_0_#1f2937] hover:bg-emerald-400 active:translate-y-1 active:shadow-none transition-all">
+                <i class="fa-solid fa-play mr-2"></i> PLAY GAME
+            </button>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div id="gameover-screen" class="absolute inset-0 z-40 bg-slate-900/90 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center hidden">
+            <h2 class="text-5xl md:text-7xl font-marker text-red-500 mb-2 drop-shadow-[3px_3px_0_#000]">GAME OVER</h2>
+            <p class="text-slate-300 font-marker text-lg mb-6">s. Sedmi needs more Ruby energy!</p>
+
+            <div class="bg-white border-4 border-slate-800 rounded-2xl p-6 w-72 md:w-80 mb-6 shadow-[6px_6px_0_#000] font-marker flex flex-col gap-3">
+                <div class="flex justify-between text-base">
+                    <span class="text-slate-600">SCORE:</span>
+                    <span id="final-score" class="text-emerald-600 font-bold text-xl">0</span>
+                </div>
+                <div class="flex justify-between text-base">
+                    <span class="text-slate-600">HIGH SCORE:</span>
+                    <span id="final-best" class="text-red-600 font-bold text-xl">0</span>
+                </div>
+            </div>
+
+            <button id="restart-btn" class="px-8 py-4 bg-red-500 rounded-2xl font-marker text-xl text-white tracking-wider border-4 border-slate-800 shadow-[5px_5px_0_#000] hover:bg-red-400 active:translate-y-1 active:shadow-none transition-all">
+                <i class="fa-solid fa-rotate-right mr-2"></i> PLAY AGAIN
+            </button>
+        </div>
+
+    </div>
+
+    <script>
+        class SoundFX {
+            constructor() {
+                this.ctx = null;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            }
+
+            jump() {
+                if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(220, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(550, this.ctx.currentTime + 0.14);
+                gain.gain.setValueAtTime(0.25, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.14);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.14);
+            }
+
+            punch() {
+                if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(300, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(70, this.ctx.currentTime + 0.12);
+                gain.gain.setValueAtTime(0.35, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.12);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.12);
+            }
+
+            burst() {
+                if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(600, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(60, this.ctx.currentTime + 0.5);
+                gain.gain.setValueAtTime(0.4, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.5);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.5);
+            }
+
+            collect() {
+                if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(523, this.ctx.currentTime);
+                osc.frequency.setValueAtTime(659, this.ctx.currentTime + 0.08);
+                gain.gain.setValueAtTime(0.25, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.18);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.18);
+            }
+
+            hurt() {
+                if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(160, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(45, this.ctx.currentTime + 0.22);
+                gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.22);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.22);
+            }
+        }
+
+        const audio = new SoundFX();
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Virtual internal dimensions
+        const V_WIDTH = 1280;
+        const V_HEIGHT = 720;
+        const GROUND_Y = V_HEIGHT - 100;
+
+        // High DPI Crisp Resolution Scaling logic
+        let dpr = window.devicePixelRatio || 1;
+
+        function resizeCanvas() {
+            dpr = window.devicePixelRatio || 1;
+            canvas.width = V_WIDTH * dpr;
+            canvas.height = V_HEIGHT * dpr;
+            ctx.scale(dpr, dpr);
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        let gameState = 'START';
+        let score = 0;
+        let highScore = localStorage.getItem('s_sedmi_high') || 0;
+
+        document.getElementById('hud-highscore').innerText = String(highScore).padStart(6, '0');
+
+        const keys = { left: false, right: false, jump: false, punch: false, special: false };
+
+        class Particle {
+            constructor(x, y, color, vx, vy, size, life, type = 'normal') {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.vx = vx;
+                this.vy = vy;
+                this.size = size;
+                this.maxLife = life;
+                this.life = life;
+                this.type = type;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.life--;
+            }
+
+            draw(c) {
+                const alpha = Math.max(0, this.life / this.maxLife);
+                c.save();
+                c.globalAlpha = alpha;
+                c.fillStyle = this.color;
+                c.strokeStyle = this.color;
+                c.lineWidth = 2;
+
+                if (this.type === 'zap') {
+                    c.beginPath();
+                    c.moveTo(this.x, this.y);
+                    c.lineTo(this.x + (Math.random() - 0.5) * 18, this.y + (Math.random() - 0.5) * 18);
+                    c.stroke();
+                } else {
+                    c.beginPath();
+                    c.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    c.fill();
+                }
+                c.restore();
+            }
+        }
+
+        let particles = [];
+        let projectiles = [];
+
+        class Player {
+            constructor() {
+                this.x = 220;
+                this.y = GROUND_Y - 70;
+                this.vx = 0;
+                this.vy = 0;
+                this.width = 75;
+                this.height = 115;
+                this.speed = 7.5;
+                this.jumpForce = -15.5;
+                this.isGrounded = false;
+                this.jumpCount = 0;
+
+                this.hp = 3;
+                this.rubyEnergy = 0;
+                this.facing = 1;
+
+                this.isAttacking = false;
+                this.attackTimer = 0;
+                this.invincibleTimer = 0;
+            }
+
+            reset() {
+                this.x = 220;
+                this.y = GROUND_Y - 70;
+                this.vx = 0;
+                this.vy = 0;
+                this.hp = 3;
+                this.rubyEnergy = 0;
+                this.facing = 1;
+                this.isAttacking = false;
+                this.invincibleTimer = 0;
+            }
+
+            update() {
+                if (keys.left) {
+                    this.vx = -this.speed;
+                    this.facing = -1;
+                } else if (keys.right) {
+                    this.vx = this.speed;
+                    this.facing = 1;
+                } else {
+                    this.vx *= 0.82;
+                }
+
+                this.x += this.vx;
+                this.x = Math.max(45, Math.min(V_WIDTH - 45, this.x));
+
+                // Gravity logic
+                this.vy += 0.72;
+                this.y += this.vy;
+
+                if (this.y >= GROUND_Y - 60) {
+                    this.y = GROUND_Y - 60;
+                    this.vy = 0;
+                    this.isGrounded = true;
+                    this.jumpCount = 0;
+                } else {
+                    this.isGrounded = false;
+                }
+
+                if (this.invincibleTimer > 0) this.invincibleTimer--;
+
+                // Electric Aura Particle Trails
+                if (Math.random() > 0.25) {
+                    particles.push(new Particle(
+                        this.x + (Math.random() - 0.5) * 60,
+                        this.y + (Math.random() - 0.5) * 90,
+                        Math.random() > 0.4 ? '#ef4444' : '#10b981',
+                        (Math.random() - 0.5) * 2,
+                        (Math.random() - 0.5) * 2,
+                        Math.random() * 2.5 + 1,
+                        18,
+                        'zap'
+                    ));
+                }
+
+                if (this.attackTimer > 0) {
+                    this.attackTimer--;
+                    if (this.attackTimer === 0) this.isAttacking = false;
+                }
+            }
+
+            jump() {
+                if (this.isGrounded || this.jumpCount < 2) {
+                    this.vy = this.jumpForce;
+                    this.jumpCount++;
+                    audio.jump();
+
+                    for (let i = 0; i < 8; i++) {
+                        particles.push(new Particle(
+                            this.x, this.y + 40,
+                            '#10b981',
+                            (Math.random() - 0.5) * 4,
+                            Math.random() * 2,
+                            Math.random() * 3 + 2,
+                            14
+                        ));
+                    }
+                }
+            }
+
+            punch() {
+                this.isAttacking = true;
+                this.attackTimer = 14;
+                audio.punch();
+
+                projectiles.push({
+                    x: this.x + this.facing * 42,
+                    y: this.y - 8,
+                    vx: this.facing * 15,
+                    vy: 0,
+                    radius: 20,
+                    life: 55
+                });
+            }
+
+            superBurst() {
+                if (this.rubyEnergy >= 100) {
+                    this.rubyEnergy = 0;
+                    audio.burst();
+
+                    // Massive Red Energy Explosion Particles (No screen shaking)
+                    for (let i = 0; i < 90; i++) {
+                        const angle = Math.random() * Math.PI * 2;
+                        const spd = Math.random() * 18 + 4;
+                        particles.push(new Particle(
+                            this.x, this.y,
+                            Math.random() > 0.5 ? '#ef4444' : '#f59e0b',
+                            Math.cos(angle) * spd,
+                            Math.sin(angle) * spd,
+                            Math.random() * 6 + 3,
+                            45,
+                            'zap'
+                        ));
+                    }
+
+                    enemies.forEach(enemy => enemy.destroy());
+                }
+            }
+
+            draw(c) {
+                if (this.invincibleTimer % 4 >= 2) return;
+
+                c.save();
+                c.translate(this.x, this.y);
+                if (this.facing === -1) c.scale(-1, 1);
+
+                // --- 1. CRACKLING RED ELECTRIC ENERGY AURA (Matches Drawing) ---
+                c.strokeStyle = '#ef4444';
+                c.lineWidth = 2.5;
+                c.beginPath();
+                for (let i = 0; i < 8; i++) {
+                    const ang = (i / 8) * Math.PI * 2;
+                    const r = 58 + Math.random() * 12;
+                    c.lineTo(Math.cos(ang) * r, Math.sin(ang) * r);
+                }
+                c.closePath();
+                c.stroke();
+
+                // --- 2. HIGH-DETAIL GREEN QUILLS (Wavy/Zigzag & Shaded) ---
+                c.fillStyle = '#059669';
+                c.strokeStyle = '#022c22';
+                c.lineWidth = 3.5;
+
+                // Left wavy quill
+                c.beginPath();
+                c.moveTo(-16, -18);
+                c.quadraticCurveTo(-45, -45, -42, -85);
+                c.quadraticCurveTo(-26, -58, -8, -26);
+                c.fill();
+                c.stroke();
+
+                // Center tall main quills (Zigzag energy spikes)
+                c.beginPath();
+                c.moveTo(-10, -22);
+                c.lineTo(-14, -58);
+                c.lineTo(-4, -72);
+                c.lineTo(-18, -108);
+                c.lineTo(4, -68);
+                c.lineTo(2, -28);
+                c.fill();
+                c.stroke();
+
+                // Right wavy quill
+                c.beginPath();
+                c.moveTo(4, -22);
+                c.quadraticCurveTo(36, -48, 48, -82);
+                c.quadraticCurveTo(22, -52, 12, -18);
+                c.fill();
+                c.stroke();
+
+                // Side horizontal wavy ears/quills
+                c.beginPath();
+                c.moveTo(-22, -4);
+                c.quadraticCurveTo(-54, -24, -58, -4);
+                c.quadraticCurveTo(-38, 12, -18, 6);
+                c.fill();
+                c.stroke();
+
+                // Quill highlight details
+                c.strokeStyle = '#34d399';
+                c.lineWidth = 2;
+                c.beginPath();
+                c.moveTo(-12, -95);
+                c.lineTo(-2, -65);
+                c.moveTo(-36, -72);
+                c.quadraticCurveTo(-32, -48, -16, -30);
+                c.stroke();
+
+                // --- 3. HEAD & TAN/ORANGE LOWER MUZZLE FACE ---
+                c.strokeStyle = '#022c22';
+                c.lineWidth = 3.5;
+
+                // Green upper forehead
+                c.fillStyle = '#047857';
+                c.beginPath();
+                c.arc(0, -4, 27, Math.PI, 0);
+                c.fill();
+                c.stroke();
+
+                // Tan/Orange lower face muzzle
+                c.fillStyle = '#f97316';
+                c.beginPath();
+                c.arc(0, 3, 25, 0, Math.PI);
+                c.fill();
+                c.stroke();
+
+                // Dark Eyebrows / Eye Mask
+                c.fillStyle = '#111827';
+                c.beginPath();
+                c.moveTo(-20, -12);
+                c.lineTo(0, -2);
+                c.lineTo(20, -12);
+                c.lineTo(14, -3);
+                c.lineTo(-14, -3);
+                c.fill();
+
+                // Fierce Eyes with glowing orange iris
+                c.fillStyle = '#fbbf24';
+                c.beginPath();
+                c.arc(-9, 0, 4.5, 0, Math.PI * 2);
+                c.arc(9, 0, 4.5, 0, Math.PI * 2);
+                c.fill();
+
+                c.fillStyle = '#000';
+                c.beginPath();
+                c.arc(-8, 0, 2, 0, Math.PI * 2);
+                c.arc(10, 0, 2, 0, Math.PI * 2);
+                c.fill();
+
+                // Black nose & frowning mouth line
+                c.fillStyle = '#111827';
+                c.beginPath();
+                c.arc(0, 7, 3, 0, Math.PI * 2);
+                c.fill();
+
+                c.strokeStyle = '#111827';
+                c.lineWidth = 3;
+                c.beginPath();
+                c.moveTo(-9, 17);
+                c.lineTo(9, 15);
+                c.stroke();
+
+                // --- 4. BODY, EMBLEM STRIPE & LEGS ---
+                // Green Torso
+                c.fillStyle = '#059669';
+                c.strokeStyle = '#022c22';
+                c.lineWidth = 3.5;
+                c.beginPath();
+                c.roundRect(-13, 24, 26, 32, 6);
+                c.fill();
+                c.stroke();
+
+                // Central Golden Oval emblem stripe
+                c.fillStyle = '#facc15';
+                c.beginPath();
+                c.ellipse(0, 40, 5.5, 11, 0, 0, Math.PI * 2);
+                c.fill();
+                c.stroke();
+
+                // Skinny Legs (Green/Yellow striped details)
+                c.strokeStyle = '#111827';
+                c.lineWidth = 4;
+                c.beginPath();
+                c.moveTo(-7, 56);
+                c.lineTo(-9, 78);
+                c.moveTo(7, 56);
+                c.lineTo(9, 78);
+                c.stroke();
+
+                // Detailed Black Boots with laces & soles
+                c.fillStyle = '#111827';
+                c.beginPath();
+                c.roundRect(-18, 78, 17, 13, 4);
+                c.roundRect(2, 78, 17, 13, 4);
+                c.fill();
+
+                c.fillStyle = '#facc15';
+                c.fillRect(-15, 81, 13, 3);
+                c.fillRect(5, 81, 13, 3);
+
+                // --- 5. RED/PINK BOXING GLOVES (With Energy Aura) ---
+                c.fillStyle = '#dc2626';
+                c.strokeStyle = '#7f1d1d';
+                c.lineWidth = 3.5;
+
+                // Left glove
+                c.beginPath();
+                c.arc(-28, 34, 13, 0, Math.PI * 2);
+                c.fill();
+                c.stroke();
+
+                // Right glove (Expands forward when punching)
+                const rx = this.isAttacking ? 38 : 28;
+                c.beginPath();
+                c.arc(rx, 34, this.isAttacking ? 19 : 13, 0, Math.PI * 2);
+                c.fill();
+                c.stroke();
+
+                // Glove red aura rings
+                c.strokeStyle = '#ef4444';
+                c.lineWidth = 2;
+                c.beginPath();
+                c.arc(-28, 34, 17, 0, Math.PI * 2);
+                c.arc(rx, 34, this.isAttacking ? 24 : 17, 0, Math.PI * 2);
+                c.stroke();
+
+                c.restore();
+            }
+        }
+
+        const player = new Player();
+
+        class Collectible {
+            constructor(type) {
+                this.x = V_WIDTH + 40;
+                this.y = GROUND_Y - 45 - Math.random() * 180;
+                this.type = type; // 'infinity' or 'ruby'
+                this.radius = 22;
+                this.vx = -4.2;
+            }
+
+            update() {
+                this.x += this.vx;
+
+                const dist = Math.hypot(player.x - this.x, player.y - this.y);
+                if (dist < player.width / 2 + this.radius) {
+                    audio.collect();
+                    if (this.type === 'infinity') {
+                        score += 250;
+                        player.rubyEnergy = Math.min(100, player.rubyEnergy + 15);
+                    } else {
+                        score += 500;
+                        player.rubyEnergy = Math.min(100, player.rubyEnergy + 35);
+                    }
+
+                    for (let i = 0; i < 12; i++) {
+                        particles.push(new Particle(
+                            this.x, this.y,
+                            this.type === 'infinity' ? '#10b981' : '#ef4444',
+                            (Math.random() - 0.5) * 6,
+                            (Math.random() - 0.5) * 6,
+                            Math.random() * 4 + 2,
+                            20
+                        ));
+                    }
+                    return true;
+                }
+                return this.x < -40;
+            }
+
+            draw(c) {
+                c.save();
+                c.translate(this.x, this.y);
+
+                if (this.type === 'infinity') {
+                    // Green Infinity Symbol (Exact match to drawn emblem)
+                    c.strokeStyle = '#059669';
+                    c.lineWidth = 4.5;
+                    c.beginPath();
+                    c.arc(-9, 0, 9, 0, Math.PI * 2);
+                    c.arc(9, 0, 9, 0, Math.PI * 2);
+                    c.stroke();
+
+                    // Circular ring surround
+                    c.lineWidth = 2;
+                    c.beginPath();
+                    c.arc(0, 0, 22, 0, Math.PI * 2);
+                    c.stroke();
+                } else {
+                    // Red RUBY Badge Block
+                    c.fillStyle = '#dc2626';
+                    c.strokeStyle = '#111827';
+                    c.lineWidth = 3.5;
+                    c.fillRect(-16, -16, 32, 32);
+                    c.strokeRect(-16, -16, 32, 32);
+                    c.fillStyle = '#fff';
+                    c.font = '700 12px Permanent Marker';
+                    c.fillText("RUBY", -14, 4);
+                }
+
+                c.restore();
+            }
+        }
+
+        class Enemy {
+            constructor() {
+                this.x = V_WIDTH + 50;
+                this.y = GROUND_Y - 38;
+                this.radius = 24;
+                this.vx = -(5.2 + Math.random() * 2.8);
+            }
+
+            update() {
+                this.x += this.vx;
+
+                // Collide with Ruby Punch Projectiles
+                for (let i = projectiles.length - 1; i >= 0; i--) {
+                    const proj = projectiles[i];
+                    const distProj = Math.hypot(proj.x - this.x, proj.y - this.y);
+                    if (distProj < this.radius + proj.radius) {
+                        projectiles.splice(i, 1);
+                        this.destroy();
+                        return true;
+                    }
+                }
+
+                // Collide with Player
+                const distPlayer = Math.hypot(player.x - this.x, player.y - this.y);
+                if (distPlayer < player.width / 2 + this.radius) {
+                    if (player.invincibleTimer === 0) {
+                        player.hp--;
+                        player.invincibleTimer = 45;
+                        audio.hurt();
+                        if (player.hp <= 0) gameOver();
+                    }
+                }
+
+                return this.x < -50;
+            }
+
+            destroy() {
+                score += 150;
+                audio.punch();
+                for (let i = 0; i < 14; i++) {
+                    particles.push(new Particle(
+                        this.x, this.y,
+                        '#1f2937',
+                        (Math.random() - 0.5) * 8,
+                        (Math.random() - 0.5) * 8,
+                        Math.random() * 4 + 2,
+                        25
+                    ));
+                }
+                this.x = -100;
+            }
+
+            draw(c) {
+                c.save();
+                c.translate(this.x, this.y);
+
+                // Dark Corrupted Ink Drone
+                c.fillStyle = '#111827';
+                c.strokeStyle = '#ef4444';
+                c.lineWidth = 3.5;
+                c.beginPath();
+                c.arc(0, 0, this.radius, 0, Math.PI * 2);
+                c.fill();
+                c.stroke();
+
+                // Spikes
+                for (let i = 0; i < 6; i++) {
+                    const a = (i / 6) * Math.PI * 2;
+                    c.beginPath();
+                    c.moveTo(Math.cos(a) * this.radius, Math.sin(a) * this.radius);
+                    c.lineTo(Math.cos(a) * (this.radius + 9), Math.sin(a) * (this.radius + 9));
+                    c.stroke();
+                }
+
+                c.restore();
+            }
+        }
+
+        let collectibles = [];
+        let enemies = [];
+        let spawnTimer = 0;
+
+        function updateGame() {
+            if (gameState !== 'PLAYING') return;
+
+            player.update();
+
+            // Projectiles
+            for (let i = projectiles.length - 1; i >= 0; i--) {
+                const p = projectiles[i];
+                p.x += p.vx;
+                p.life--;
+                if (p.life <= 0 || p.x > V_WIDTH + 60 || p.x < -60) {
+                    projectiles.splice(i, 1);
+                }
+            }
+
+            // Spawning
+            spawnTimer++;
+            if (spawnTimer % 70 === 0) {
+                enemies.push(new Enemy());
+            }
+
+            if (spawnTimer % 105 === 0) {
+                collectibles.push(new Collectible(Math.random() > 0.4 ? 'infinity' : 'ruby'));
+            }
+
+            for (let i = collectibles.length - 1; i >= 0; i--) {
+                if (collectibles[i].update()) collectibles.splice(i, 1);
+            }
+
+            for (let i = enemies.length - 1; i >= 0; i--) {
+                if (enemies[i].update()) enemies.splice(i, 1);
+            }
+
+            for (let i = particles.length - 1; i >= 0; i--) {
+                particles[i].update();
+                if (particles[i].life <= 0) particles.splice(i, 1);
+            }
+
+            // HUD Sync
+            document.getElementById('score-display').innerText = String(Math.floor(score)).padStart(6, '0');
+            document.getElementById('ruby-bar').style.width = `${player.rubyEnergy}%`;
+            document.getElementById('ruby-percent').innerText = `${Math.floor(player.rubyEnergy)}%`;
+
+            const heartsContainer = document.getElementById('hearts-container');
+            heartsContainer.innerHTML = '';
+            for (let i = 0; i < 3; i++) {
+                heartsContainer.innerHTML += i < player.hp 
+                    ? '<i class="fa-solid fa-heart"></i>' 
+                    : '<i class="fa-regular fa-heart text-slate-400"></i>';
+            }
+
+            const prompt = document.getElementById('ruby-ready-prompt');
+            if (player.rubyEnergy >= 100) prompt.classList.remove('hidden');
+            else prompt.classList.add('hidden');
+        }
+
+        function drawGame() {
+            ctx.save();
+
+            // Clear Frame (NO Screen shake offset applied)
+            ctx.clearRect(0, 0, V_WIDTH, V_HEIGHT);
+
+            // --- DRAW HAND-DRAWN PAPER HEADER & EMBLEMS ---
+            ctx.font = '700 54px Permanent Marker';
+            ctx.fillStyle = '#059669';
+            ctx.fillText("s. Sedmi.", V_WIDTH / 2 - 120, 80);
+
+            // Red RUBY Badge Scribble
+            ctx.strokeStyle = '#dc2626';
+            ctx.lineWidth = 3.5;
+            ctx.strokeRect(V_WIDTH - 280, 95, 110, 48);
+            ctx.fillStyle = '#dc2626';
+            ctx.font = '700 26px Permanent Marker';
+            ctx.fillText("Ruby", V_WIDTH - 262, 128);
+
+            // Green Infinity Symbol in circle background artwork
+            ctx.strokeStyle = '#059669';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(V_WIDTH - 120, 200, 26, 0, Math.PI * 2);
+            ctx.stroke();
+
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.arc(V_WIDTH - 128, 200, 8, 0, Math.PI * 2);
+            ctx.arc(V_WIDTH - 112, 200, 8, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Red Emblem Logo bottom right
+            ctx.strokeStyle = '#991b1b';
+            ctx.beginPath();
+            ctx.arc(V_WIDTH - 220, 210, 20, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Notebook Ground Line
+            ctx.strokeStyle = '#1f2937';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(0, GROUND_Y);
+            ctx.lineTo(V_WIDTH, GROUND_Y);
+            ctx.stroke();
+
+            // Ground Hatching Lines
+            ctx.lineWidth = 2;
+            for (let x = 0; x < V_WIDTH; x += 24) {
+                ctx.beginPath();
+                ctx.moveTo(x, GROUND_Y);
+                ctx.lineTo(x - 14, GROUND_Y + 24);
+                ctx.stroke();
+            }
+
+            // Draw Energy Projectiles
+            projectiles.forEach(p => {
+                ctx.fillStyle = '#ef4444';
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.strokeStyle = '#fca5a5';
+                ctx.lineWidth = 2.5;
+                ctx.stroke();
+            });
+
+            // Draw Entities & Character
+            collectibles.forEach(c => c.draw(ctx));
+            enemies.forEach(e => e.draw(ctx));
+            player.draw(ctx);
+            particles.forEach(pt => pt.draw(ctx));
+
+            ctx.restore();
+        }
+
+        function gameLoop() {
+            updateGame();
+            drawGame();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function startGame() {
+            audio.init();
+            score = 0;
+            player.reset();
+            enemies = [];
+            collectibles = [];
+            particles = [];
+            projectiles = [];
+
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('gameover-screen').classList.add('hidden');
+            document.getElementById('hud-layer').classList.remove('hidden');
+            document.getElementById('touch-controls').classList.remove('hidden');
+
+            gameState = 'PLAYING';
+        }
+
+        function gameOver() {
+            gameState = 'GAMEOVER';
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('s_sedmi_high', highScore);
+            }
+
+            document.getElementById('final-score').innerText = Math.floor(score);
+            document.getElementById('final-best').innerText = Math.floor(highScore);
+
+            document.getElementById('hud-layer').classList.add('hidden');
+            document.getElementById('gameover-screen').classList.remove('hidden');
+        }
+
+        // --- Controls Event Handlers ---
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.left = true;
+            if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = true;
+            if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W' || e.key === ' ') {
+                if (!keys.jump) player.jump();
+                keys.jump = true;
+            }
+            if (e.key === 'z' || e.key === 'Z' || e.key === 'j' || e.key === 'J') {
+                if (!keys.punch) player.punch();
+                keys.punch = true;
+            }
+            if (e.key === 'x' || e.key === 'X' || e.key === 'k' || e.key === 'K') {
+                player.superBurst();
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.left = false;
+            if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = false;
+            if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W' || e.key === ' ') keys.jump = false;
+            if (e.key === 'z' || e.key === 'Z' || e.key === 'j' || e.key === 'J') keys.punch = false;
+        });
+
+        function setupTouchBtn(id, pressFn, releaseFn) {
+            const btn = document.getElementById(id);
+            if (!btn) return;
+            btn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                audio.init();
+                pressFn();
+            });
+            btn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                if (releaseFn) releaseFn();
+            });
+        }
+
+        setupTouchBtn('btn-left', () => keys.left = true, () => keys.left = false);
+        setupTouchBtn('btn-right', () => keys.right = true, () => keys.right = false);
+        setupTouchBtn('btn-jump', () => player.jump());
+        setupTouchBtn('btn-punch', () => player.punch());
+        setupTouchBtn('btn-special', () => player.superBurst());
+
+        document.getElementById('start-btn').addEventListener('click', startGame);
+        document.getElementById('restart-btn').addEventListener('click', startGame);
+
+        window.onload = function() {
+            gameLoop();
+        };
+    </script>
+</body>
+</html>
