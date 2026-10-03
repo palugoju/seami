@@ -54,12 +54,22 @@
             border: 3px solid #1f2937;
             box-shadow: 0 4px 0 #1f2937;
             transition: all 0.08s ease;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
         }
 
         .touch-btn:active {
             transform: translateY(3px);
             box-shadow: 0 1px 0 #1f2937;
             background: #fef08a;
+        }
+
+        /* iPad-specific layout */
+        @media (min-width: 768px) {
+            #touch-controls {
+                display: flex !important;
+            }
         }
     </style>
 </head>
@@ -123,17 +133,21 @@
             </div>
         </div>
 
-        <!-- Touch Controls (Mobile) -->
-        <div id="touch-controls" class="absolute inset-0 pointer-events-auto z-30 hidden md:hidden flex justify-between items-end p-4">
-            <div class="flex gap-2">
-                <button id="btn-left" class="touch-btn w-16 h-16 rounded-2xl text-slate-800 text-2xl font-bold flex items-center justify-center"><i class="fa-solid fa-arrow-left"></i></button>
-                <button id="btn-right" class="touch-btn w-16 h-16 rounded-2xl text-slate-800 text-2xl font-bold flex items-center justify-center"><i class="fa-solid fa-arrow-right"></i></button>
+        <!-- Touch Controls (Mobile & Tablet) -->
+        <div id="touch-controls" class="absolute inset-0 pointer-events-auto z-30 hidden flex justify-between items-end p-4 md:p-6">
+            <!-- Left Movement Controls -->
+            <div class="flex flex-col gap-3">
+                <div class="flex gap-2">
+                    <button id="btn-left" class="touch-btn w-16 h-16 md:w-20 md:h-20 rounded-2xl text-slate-800 text-2xl md:text-3xl font-bold flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-arrow-left"></i></button>
+                    <button id="btn-right" class="touch-btn w-16 h-16 md:w-20 md:h-20 rounded-2xl text-slate-800 text-2xl md:text-3xl font-bold flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-arrow-right"></i></button>
+                </div>
+                <button id="btn-jump" class="touch-btn w-full md:w-[160px] px-4 py-3 rounded-2xl bg-emerald-300 text-emerald-950 font-marker text-sm md:text-base flex items-center justify-center gap-2 flex-shrink-0"><i class="fa-solid fa-arrow-up"></i> JUMP</button>
             </div>
 
-            <div class="flex gap-2 items-end">
-                <button id="btn-jump" class="touch-btn w-14 h-14 rounded-2xl bg-emerald-300 text-emerald-950 font-marker text-xs flex flex-col items-center justify-center"><i class="fa-solid fa-arrow-up text-lg"></i>JUMP</button>
-                <button id="btn-punch" class="touch-btn w-16 h-16 rounded-2xl bg-red-400 text-red-950 font-marker text-xs flex flex-col items-center justify-center"><i class="fa-solid fa-hand-fist text-xl"></i>PUNCH</button>
-                <button id="btn-special" class="touch-btn w-14 h-14 rounded-2xl bg-yellow-300 text-yellow-950 font-marker text-xs flex flex-col items-center justify-center"><i class="fa-solid fa-bolt text-lg"></i>BURST</button>
+            <!-- Right Action Controls -->
+            <div class="flex flex-col gap-2 items-end">
+                <button id="btn-punch" class="touch-btn w-16 h-16 md:w-24 md:h-24 rounded-2xl bg-red-400 text-red-950 font-marker text-xs md:text-sm flex flex-col items-center justify-center flex-shrink-0"><i class="fa-solid fa-hand-fist text-xl md:text-2xl mb-1"></i><span>PUNCH</span></button>
+                <button id="btn-special" class="touch-btn w-16 h-16 md:w-24 md:h-24 rounded-2xl bg-yellow-300 text-yellow-950 font-marker text-xs md:text-sm flex flex-col items-center justify-center flex-shrink-0"><i class="fa-solid fa-bolt text-xl md:text-2xl mb-1"></i><span>BURST</span></button>
             </div>
         </div>
 
@@ -153,10 +167,10 @@
             </div>
 
             <p class="max-w-md text-sm md:text-base font-bold text-slate-700 mb-6 leading-snug">
-                Defend the drawing canvas! Collect <strong class="text-emerald-600">Green Infinity Icons</strong> & <strong class="text-red-600">Ruby Badges</strong>, defeat dark ink drones, and unleash the ultimate <strong class="text-red-600">Aura Blast</strong>!
+                Defend the drawing canvas! Collect <strong class="text-emerald-600">Green Infinity Icons</strong> & <strong class="text-red-600">Ruby Badges</strong>, defeat dark ink drones, and unleash your Ruby Energy!
             </p>
 
-            <button id="start-btn" class="px-8 py-4 bg-emerald-500 rounded-2xl font-marker text-xl text-white tracking-wider border-4 border-slate-800 shadow-[5px_5px_0_#1f2937] hover:bg-emerald-400 active:translate-y-1 active:shadow-none transition-all">
+            <button id="start-btn" class="px-8 py-4 bg-emerald-500 rounded-2xl font-marker text-xl text-white tracking-wider border-4 border-slate-800 shadow-[5px_5px_0_#1f2937] hover:bg-emerald-400 active:translate-y-1 active:shadow-[2px_2px_0_#1f2937]">
                 <i class="fa-solid fa-play mr-2"></i> PLAY GAME
             </button>
         </div>
@@ -177,7 +191,7 @@
                 </div>
             </div>
 
-            <button id="restart-btn" class="px-8 py-4 bg-red-500 rounded-2xl font-marker text-xl text-white tracking-wider border-4 border-slate-800 shadow-[5px_5px_0_#000] hover:bg-red-400 active:translate-y-1 active:shadow-none transition-all">
+            <button id="restart-btn" class="px-8 py-4 bg-red-500 rounded-2xl font-marker text-xl text-white tracking-wider border-4 border-slate-800 shadow-[5px_5px_0_#000] hover:bg-red-400 active:translate-y-1 active:shadow-[2px_2px_0_#000]">
                 <i class="fa-solid fa-rotate-right mr-2"></i> PLAY AGAIN
             </button>
         </div>
@@ -998,60 +1012,106 @@
             document.getElementById('final-score').innerText = Math.floor(score);
             document.getElementById('final-best').innerText = Math.floor(highScore);
 
-            document.getElementById('hud-layer').classList.add('hidden');
             document.getElementById('gameover-screen').classList.remove('hidden');
         }
 
-        // --- Controls Event Handlers ---
-        window.addEventListener('keydown', (e) => {
-            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.left = true;
-            if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = true;
-            if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W' || e.key === ' ') {
-                if (!keys.jump) player.jump();
+        // Keyboard Controls
+        window.addEventListener('keydown', e => {
+            if (gameState !== 'PLAYING') return;
+            if (e.key === 'a' || e.key === 'A' || e.key === 'ArrowLeft') keys.left = true;
+            if (e.key === 'd' || e.key === 'D' || e.key === 'ArrowRight') keys.right = true;
+            if (e.key === 'w' || e.key === 'W' || e.key === ' ') {
                 keys.jump = true;
+                player.jump();
             }
             if (e.key === 'z' || e.key === 'Z' || e.key === 'j' || e.key === 'J') {
-                if (!keys.punch) player.punch();
                 keys.punch = true;
+                player.punch();
             }
             if (e.key === 'x' || e.key === 'X' || e.key === 'k' || e.key === 'K') {
+                keys.special = true;
                 player.superBurst();
             }
         });
 
-        window.addEventListener('keyup', (e) => {
-            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.left = false;
-            if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = false;
-            if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W' || e.key === ' ') keys.jump = false;
+        window.addEventListener('keyup', e => {
+            if (e.key === 'a' || e.key === 'A' || e.key === 'ArrowLeft') keys.left = false;
+            if (e.key === 'd' || e.key === 'D' || e.key === 'ArrowRight') keys.right = false;
+            if (e.key === 'w' || e.key === 'W' || e.key === ' ') keys.jump = false;
             if (e.key === 'z' || e.key === 'Z' || e.key === 'j' || e.key === 'J') keys.punch = false;
+            if (e.key === 'x' || e.key === 'X' || e.key === 'k' || e.key === 'K') keys.special = false;
         });
 
-        function setupTouchBtn(id, pressFn, releaseFn) {
-            const btn = document.getElementById(id);
-            if (!btn) return;
-            btn.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                audio.init();
-                pressFn();
-            });
-            btn.addEventListener('touchend', (e) => {
-                e.preventDefault();
-                if (releaseFn) releaseFn();
-            });
-        }
+        // Touch Controls - Left Button (Move Left)
+        document.getElementById('btn-left').addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            keys.left = true;
+        });
+        document.getElementById('btn-left').addEventListener('touchend', (e) => {
+            e.preventDefault();
+            keys.left = false;
+        });
 
-        setupTouchBtn('btn-left', () => keys.left = true, () => keys.left = false);
-        setupTouchBtn('btn-right', () => keys.right = true, () => keys.right = false);
-        setupTouchBtn('btn-jump', () => player.jump());
-        setupTouchBtn('btn-punch', () => player.punch());
-        setupTouchBtn('btn-special', () => player.superBurst());
+        // Touch Controls - Right Button (Move Right)
+        document.getElementById('btn-right').addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            keys.right = true;
+        });
+        document.getElementById('btn-right').addEventListener('touchend', (e) => {
+            e.preventDefault();
+            keys.right = false;
+        });
 
+        // Touch Controls - Jump Button
+        document.getElementById('btn-jump').addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (gameState === 'PLAYING') {
+                keys.jump = true;
+                player.jump();
+            }
+        });
+        document.getElementById('btn-jump').addEventListener('touchend', (e) => {
+            e.preventDefault();
+            keys.jump = false;
+        });
+
+        // Touch Controls - Punch Button
+        document.getElementById('btn-punch').addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (gameState === 'PLAYING') {
+                keys.punch = true;
+                player.punch();
+            }
+        });
+        document.getElementById('btn-punch').addEventListener('touchend', (e) => {
+            e.preventDefault();
+            keys.punch = false;
+        });
+
+        // Touch Controls - Special (Burst) Button
+        document.getElementById('btn-special').addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (gameState === 'PLAYING') {
+                keys.special = true;
+                player.superBurst();
+            }
+        });
+        document.getElementById('btn-special').addEventListener('touchend', (e) => {
+            e.preventDefault();
+            keys.special = false;
+        });
+
+        // Start Button
         document.getElementById('start-btn').addEventListener('click', startGame);
-        document.getElementById('restart-btn').addEventListener('click', startGame);
 
-        window.onload = function() {
-            gameLoop();
-        };
+        // Restart Button
+        document.getElementById('restart-btn').addEventListener('click', () => {
+            document.getElementById('gameover-screen').classList.add('hidden');
+            startGame();
+        });
+
+        gameLoop();
     </script>
+
 </body>
 </html>
